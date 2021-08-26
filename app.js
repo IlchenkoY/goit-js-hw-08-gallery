@@ -66,12 +66,25 @@ const galleryItems = [
 
 const galleryItemsListEl = document.querySelector('.js-gallery');
 const galleryModalEl = document.querySelector('.js-lightbox');
+const galleryModalOverlayEl = document.querySelector('.lightbox__overlay')
 const modalImgEl = document.querySelector('.lightbox__image');
+const closeModalBtnEl = document.querySelector('[data-action="close-lightbox"]')
 const galleryItemsMarkup = createGalleryItemsMarkup(galleryItems);
+const currentModalImgSrc = [];
+const currentModalImgDescription = [];
+  
+
+  galleryItems.map(galleryItem => {
+    currentModalImgSrc.push(galleryItem.original);
+    currentModalImgDescription.push(galleryItem.description);
+  })
 
 galleryItemsListEl.insertAdjacentHTML('beforeend', galleryItemsMarkup);
 
 galleryItemsListEl.addEventListener('click', galleryClickHandler);
+galleryModalEl.addEventListener('click', overlayClickHandler);
+
+
 
 function createGalleryItemsMarkup(galleryItems) {
   return galleryItems.map(({ preview, original, description }) => {
@@ -95,15 +108,51 @@ function createGalleryItemsMarkup(galleryItems) {
 
 function galleryClickHandler(e) {
   e.preventDefault()
-
+ 
   const isDataSource = e.target.dataset.source;
   if (!isDataSource) {
     return;
   }
-  
+
+  window.addEventListener('keydown', escKeyHandler);
   galleryModalEl.classList.add('is-open');
   modalImgEl.src = e.target.dataset.source;
   modalImgEl.alt = e.target.alt;
+  window.addEventListener('keydown', swipingModalImagesHandler);
+}
+
+function closeModalHandler(e) {
+  window.removeEventListener('keydown', escKeyHandler);
+  window.removeEventListener('keydown', swipingModalImagesHandler);
+  galleryModalEl.classList.remove('is-open');
+  modalImgEl.src = '';
+  modalImgEl.alt = '';
+}
+
+function overlayClickHandler(e) {
+  if (e.target !== modalImgEl) {
+    closeModalHandler();
+  }
+}
+
+function escKeyHandler(e) {
+  if (e.code === 'Escape') {
+    closeModalHandler();
+  }
+}
   
+function swipingModalImagesHandler(e) {
+  const indexCurrentImg = currentModalImgSrc.indexOf(modalImgEl.src);
+  const indexCurrentImgDescription = currentModalImgDescription.indexOf(modalImgEl.alt);
+
+  
+  if (e.code === 'ArrowRight'&& indexCurrentImg +1 < currentModalImgSrc.length) {
+    modalImgEl.src = currentModalImgSrc[indexCurrentImg + 1];
+    modalImgEl.alt = currentModalImgDescription[indexCurrentImgDescription + 1];
+  }
+  if (e.code === 'ArrowLeft'&& indexCurrentImg > 0) {
+    modalImgEl.src = currentModalImgSrc[indexCurrentImg - 1]
+    modalImgEl.alt = currentModalImgDescription[indexCurrentImgDescription - 1];
+  }
   
 }
